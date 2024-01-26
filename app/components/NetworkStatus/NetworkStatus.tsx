@@ -50,7 +50,7 @@ const getStartupStatusText = (startupStatus: NodeStartupState) => {
           <Tooltip
             width={200}
             marginTop={-2}
-            text="This process is expected to take up to a few hours and you will see CPU usage increase during this time. Please be patient."
+            text="This process is expected to take up to a few hours and you may see CPU usage increase during this time. Please be patient."
           />
         </>
       );
@@ -71,17 +71,31 @@ const NetworkStatus = ({
   isWalletMode,
   isShowMissingLibsMessage,
 }: Props) => {
-  const getSyncLabelPercentage = (): number => {
-    if (status && status.verifiedLayer && status.topLayer) {
-      const percentage = Math.floor(
-        (status.verifiedLayer * 100) / status.topLayer
-      );
-      const maxPercentage = status.isSynced ? 100 : 99;
-      return constrain(0, maxPercentage, percentage);
-    }
-    return 0;
-  };
-
+	if (startupStatus == NodeStartupState.SyncingAtxs){
+	  const getSyncLabelPercentage = (): number => {
+		if (status && status.syncedLayer && status.topLayer) {
+		  const percentage = Math.floor(
+			(status.syncedLayer * 100) / status.topLayer
+		  );
+		  const maxPercentage = status.isSynced ? 100 : 99;
+		  return constrain(0, maxPercentage, percentage);
+		}
+		return 0;
+	  };
+	}
+	
+	if (startupStatus == NodeStartupState.VerifyingLayers){
+	  const getSyncLabelPercentage = (): number => {
+		if (status && status.verifiedLayer && status.topLayer) {
+		  const percentage = Math.floor(
+			(status.verifiedLayer * 100) / status.topLayer
+		  );
+		  const maxPercentage = status.isSynced ? 100 : 99;
+		  return constrain(0, maxPercentage, percentage);
+		}
+		return 0;
+	  };
+	}
   const getSyncProgress = () => {
     if (
       !status ||
@@ -94,6 +108,7 @@ const NetworkStatus = ({
     }
 
     const verifiedLayer = status.verifiedLayer || 0;
+    const syncedLayer = status.syncedLayer || 0;
     const topLayer = status.topLayer || 0;
 
     if (isGenesis) {
@@ -111,16 +126,30 @@ const NetworkStatus = ({
     }
 
     const progress = getSyncLabelPercentage();
-    return (
-      <>
-        <ProgressLabel>syncing</ProgressLabel>
-        <ProgressLabel>{progress}%</ProgressLabel>
-        <ProgressLabel>{`${verifiedLayer} / ${topLayer}`}</ProgressLabel>
-        <Progress>
-          <ProgressBar progress={progress} />
-        </Progress>
-      </>
-    );
+	if (startupStatus == NodeStartupState.SyncingAtxs){
+		return (
+		  <>
+			<ProgressLabel>syncing</ProgressLabel>
+			<ProgressLabel>{progress}%</ProgressLabel>
+			<ProgressLabel>{`${syncedLayer} / ${topLayer}`}</ProgressLabel>
+			<Progress>
+			  <ProgressBar progress={progress} />
+			</Progress>
+		  </>
+		);
+	}
+	if (startupStatus == NodeStartupState.VerifyingLayers){
+		return (
+		  <>
+			<ProgressLabel>verifying data</ProgressLabel>
+			<ProgressLabel>{progress}%</ProgressLabel>
+			<ProgressLabel>{`${verifiedLayer} / ${topLayer}`}</ProgressLabel>
+			<Progress>
+			  <ProgressBar progress={progress} />
+			</Progress>
+		  </>
+		);
+	}
   };
 
   const renderSyncingStatus = () => {
